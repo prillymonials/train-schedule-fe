@@ -7,8 +7,6 @@ const BookCard = ({
   routeStationTo,
   bookStationFrom,
   bookStationTo,
-  startTime,
-  endTime,
   bookDate,
   bookTime,
   rate,
@@ -22,20 +20,12 @@ const BookCard = ({
         <label className="text-xs">{trainId}</label>
         <label className="text-xs">{trainLine}</label>
       </div>
-      <p className="text-md font-bold uppercase mt-2 mb-1">{routeStationFrom} - {routeStationTo}</p>
-      <label className="text-xs">{startTime} - {endTime}</label>
+      <p className="text-md font-bold uppercase mt-2 mb-1">{bookStationFrom} - {bookStationTo}</p>
+      <label className="text-xs">{bookDate} {bookTime}</label>
       <hr className={`my-2 ${disabled ? 'border-white' : ''}`} />
       <div className="flex flex-row justify-between text-xs mb-2">
-        <b>Book</b>
-        <label>{bookDate} {bookTime}</label>
-      </div>
-      <div className="flex flex-row justify-between text-xs mb-2">
-        <b>From</b>
-        <label>{bookStationFrom}</label>
-      </div>
-      <div className="flex flex-row justify-between text-xs mb-2">
-        <b>To</b>
-        <label>{bookStationTo}</label>
+        <b>Routes</b>
+        <label>{routeStationFrom} - {routeStationTo}</label>
       </div>
       <div className="flex flex-row justify-between text-xs mb-2">
         <b>Rate</b>

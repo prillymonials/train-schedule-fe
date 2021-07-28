@@ -17,6 +17,13 @@ const BookForm = (props) => {
   const [time, setTime] = useState('');
   const [rate, setRate] = useState('');
 
+  // Loading
+  const [isLoadingStationFrom, setLoadingStationFrom] = useState(true);
+  const [isLoadingRoute, setLoadingRoute] = useState(false);
+  const [isLoadingStationTo, setLoadingStationTo] = useState(false);
+  const [isLoadingTime, setLoadingTime] = useState(false);
+  const [isLoadingSubmit, setLoadingSubmit] = useState(false);
+
   // Options
   const [stationFromList, setStationFromList] = useState([]);
   const [routeList, setRouteList] = useState([]);
@@ -33,7 +40,7 @@ const BookForm = (props) => {
 
   useEffect(() => {
     props.setBackButton(true);
-    props.setTitle('New Books');
+    props.setTitle('New Booking');
 
     async function fetchStations() {
       try {
@@ -42,7 +49,10 @@ const BookForm = (props) => {
           label: station.name,
           value: station.code,
         })));
-      } catch (e) {}
+        setLoadingStationFrom(false);
+      } catch (e) {
+        setLoadingStationFrom(false);
+      }
     };
     if (props.userId !== null) {
       fetchStations();
@@ -58,26 +68,34 @@ const BookForm = (props) => {
         }`,
         value: route.id,
       })));
-    } catch (e) {}
+      setLoadingRoute(false);
+    } catch (e) {
+      setLoadingRoute(false);
+    }
   }
 
   async function getStationToFromRoutes(routeId) {
     try {
       const stations = await axios.get(`${BASE_URL_API}/books/stations/${routeId}`);
       let fromAndToCodeIsEqual = false;
-      const result = stations.data.map(station => {
-        const result = {
-          label: station.name,
-          value: station.station_code,
-          disabled: !fromAndToCodeIsEqual,
-        };
+      const stationList = [];
+      stations.data.forEach(station => {
+        if (fromAndToCodeIsEqual) {
+          stationList.push({
+            label: station.name,
+            value: station.station_code,
+          });
+        }
+
         if (!fromAndToCodeIsEqual && station.station_code === stationFrom) {
           fromAndToCodeIsEqual = true;
         }
-        return result;
       });
-      setStationToList(result);
-    } catch (e) {}
+      setStationToList(stationList);
+      setLoadingStationTo(false);
+    } catch (e) {
+      setLoadingStationTo(false);
+    }
   }
 
   async function getScheduleAndRates(stationToValue) {
@@ -89,14 +107,18 @@ const BookForm = (props) => {
         label: schedule.arrival_time,
         value: schedule.arrival_time,
       })));
-      setRate(rates.data[0].rate)
-    } catch (e) {}
+      setRate(rates.data[0].rate);
+      setLoadingTime(false);
+    } catch (e) {
+      setLoadingTime(false);
+    }
   }
 
   async function handleSubmitForm() {
     if (buttonDisabled) {
       return;
     }
+    setLoadingSubmit(true);
 
     try {
       await axios.post(`${BASE_URL_API}/books`, {
@@ -112,6 +134,7 @@ const BookForm = (props) => {
       props.showErrorMessage('Your book successfully submitted.');
       props.history.replace('/books');
     } catch (e) {
+      setLoadingSubmit(false);
       props.showErrorMessage(e.response.data.message);
     }
   }
@@ -122,6 +145,10 @@ const BookForm = (props) => {
     setDate('');
     setTime('');
     setRate('');
+    setRouteList([]);
+    setStationToList([]);
+    setTimeList([]);
+    setLoadingRoute(true);
     getRoutesFromStationFrom(value);
     setStationFrom(value);
   }
@@ -131,6 +158,9 @@ const BookForm = (props) => {
     setDate('');
     setTime('');
     setRate('');
+    setStationToList([]);
+    setTimeList([]);
+    setLoadingStationTo(true);
     getStationToFromRoutes(value);
     setRoute(value);
   }
@@ -139,6 +169,8 @@ const BookForm = (props) => {
     setDate('');
     setTime('');
     setRate('');
+    setTimeList([]);
+    setLoadingTime(true);
     getScheduleAndRates(value);
     setStationTo(value);
   }
@@ -151,29 +183,45 @@ const BookForm = (props) => {
 
   return (
     <div className="flex flex-col">
-      <div className="mb-2">
-        <label className="text-xs text-gray-500">Station From</label>
-        <Select
-          name="stationFrom"
-          value={stationFrom}
-          options={stationFromList}
-          onChange={e => handleChangeStationFrom(e.target.value)}
-        />
-      </div>
-      {stationFrom !== '' && (
+      {isLoadingStationFrom ? (
+        <div className="flex justify-center mt-2">
+          <img src="/loading.gif" alt="Loading" className="w-10 h-10" />
+        </div>
+      ) : (
         <div className="mb-2">
-          <label className="text-xs text-gray-500">Station From</label>
+          <label className="text-xs text-gray-500">Your Station</label>
           <Select
-            name="routes"
-            value={route}
-            options={routeList}
-            onChange={e => handleChangeRoute(e.target.value)}
+            name="stationFrom"
+            value={stationFrom}
+            options={stationFromList}
+            onChange={e => handleChangeStationFrom(e.target.value)}
           />
         </div>
       )}
-      {stationFrom !== '' && route !== '' && (
+      {stationFrom !== '' ?
+        isLoadingRoute ? (
+          <div className="flex justify-center mt-2">
+            <img src="/loading.gif" alt="Loading" className="w-10 h-10" />
+          </div>
+        ) : (
+          <div className="mb-2">
+            <label className="text-xs text-gray-500">Routes</label>
+            <Select
+              name="routes"
+              value={route}
+              options={routeList}
+              onChange={e => handleChangeRoute(e.target.value)}
+            />
+          </div>
+        ) : null
+      }
+      {stationFrom !== '' && route !== '' ? isLoadingStationTo ? (
+        <div className="flex justify-center mt-2">
+          <img src="/loading.gif" alt="Loading" className="w-10 h-10" />
+        </div>
+      ) : (
         <div className="mb-2">
-          <label className="text-xs text-gray-500">Station To</label>
+          <label className="text-xs text-gray-500">Destination</label>
           <Select
             name="stationTo"
             value={stationTo}
@@ -181,18 +229,13 @@ const BookForm = (props) => {
             onChange={e => handleChangeStationTo(e.target.value)}
           />
         </div>
-      )}
-      {stationFrom !== '' && route !== '' && stationTo !== '' && (
+      ) : null}
+      {stationFrom !== '' && route !== '' && stationTo !== '' ? isLoadingTime ? (
+        <div className="flex justify-center mt-2">
+          <img src="/loading.gif" alt="Loading" className="w-10 h-10" />
+        </div>
+      ) : (
         <>
-          <div className="mb-2">
-            <label className="text-xs text-gray-500">Time</label>
-            <Select
-              name="time"
-              value={time}
-              options={timeList}
-              onChange={e => setTime(e.target.value)}
-            />
-          </div>
           <div className="mb-2">
             <label className="text-xs text-gray-500">Date</label>
             <Input
@@ -202,6 +245,15 @@ const BookForm = (props) => {
               onChange={e => setDate(e.target.value)}
             />
           </div>
+          <div className="mb-2">
+            <label className="text-xs text-gray-500">Time</label>
+            <Select
+              name="time"
+              value={time}
+              options={timeList}
+              onChange={e => setTime(e.target.value)}
+            />
+          </div>
           <div className="mb-4">
             <label className="text-xs text-gray-500">Rate</label>
             <Input
@@ -209,15 +261,21 @@ const BookForm = (props) => {
               disabled
             />
           </div>
-          <button
-            className="bg-blue-400 text-white py-2 w-full rounded-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
-            onClick={() => handleSubmitForm()}
-            disabled={buttonDisabled}
-          >
-            Submit
-          </button>
+          {isLoadingSubmit ? (
+            <div className="flex justify-center mt-2">
+              <img src="/loading.gif" alt="Loading" className="w-10 h-10" />
+            </div>
+          ) : (
+            <button
+              className="bg-blue-400 text-white py-2 w-full rounded-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+              onClick={() => handleSubmitForm()}
+              disabled={buttonDisabled}
+            >
+              Submit
+            </button>
+          )}
         </>
-      )}
+      ) : null}
     </div>
   )
 };

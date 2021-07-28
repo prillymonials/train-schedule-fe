@@ -52,7 +52,7 @@ const Schedule = (props) => {
       ) : filteredSchedule.length === 0 ? (
         <p>No Station found.</p>
       ) : (
-        <div className="flex max-w-full flex-row flex-wrap">
+        <div className="flex max-w-full flex-row flex-wrap justify-center">
           {filteredSchedule.map(station => (
             <CircleIcon
               key={`station-${station.id}`}

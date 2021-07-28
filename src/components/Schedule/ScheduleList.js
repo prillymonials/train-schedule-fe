@@ -9,7 +9,6 @@ import ScheduleCard from './ScheduleCard';
 
 const ScheduleList = (props) => {
   const [availableSchedules, setAvailableSchedules] = useState([]);
-  const [unavailableSchedules, setUnavailableSchedules] = useState([]);
   const [isLoading, setLoading] = useState(true);
 
   const stationCode = props.match.params.code;
@@ -24,7 +23,6 @@ const ScheduleList = (props) => {
           `${BASE_URL_API}/schedules/${stationCode}`
         );
         const availableScheduleList = [];
-        const unavailableScheduleList = [];
 
         schedulesResponse.data.forEach(schedule => {
           const startTime = getTimeNumber(schedule.start_time);
@@ -35,13 +33,10 @@ const ScheduleList = (props) => {
 
           if ((startTime <= currentTime && currentTime <= endTime) || (currentTime <= startTime)) {
             availableScheduleList.push(schedule);
-          } else {
-            unavailableScheduleList.push(schedule);
           }
         });
 
         setAvailableSchedules(availableScheduleList);
-        setUnavailableSchedules(unavailableScheduleList);
         setLoading(false);
       } catch (e) {
         setLoading(false);
@@ -67,24 +62,6 @@ const ScheduleList = (props) => {
           stationTo={schedule.station_to}
           startTime={schedule.start_time}
           endTime={schedule.end_time}
-        />
-      ))}
-      <h2 className="font-bold text-lg mb-2">Unavailable Schedule</h2>
-      {isLoading ? (
-        <div className="flex justify-center">
-          <img src="/loading.gif" alt="Loading" className="w-10 h-10" />
-        </div>
-      ) : unavailableSchedules.map(schedule => (
-        <ScheduleCard
-          key={`schedule-${schedule.id}`}
-          id={schedule.id}
-          trainId={schedule.train_id}
-          trainLine={schedule.train_line}
-          stationFrom={schedule.station_from}
-          stationTo={schedule.station_to}
-          startTime={schedule.start_time}
-          endTime={schedule.end_time}
-          disabled={true}
         />
       ))}
     </>

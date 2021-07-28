@@ -36,6 +36,7 @@ const UserForm = (props) => {
   const [password, setPassword] = useState('');
   const [confPassword, setConfPassword] = useState('');
   const [isLoginMode, setLoginMode] = useState(true);
+  const [isLoading, setLoading] = useState(false);
 
   async function handleClick() {
     if (username.trim() === '' || password === '' || (!isLoginMode && confPassword === '')) {
@@ -47,6 +48,8 @@ const UserForm = (props) => {
       return;
     }
 
+    setLoading(true);
+
     try {
       const path = isLoginMode ? 'login' : 'register';
       const user = await axios.post(`${BASE_URL_API}/auth/${path}`, {
@@ -57,7 +60,12 @@ const UserForm = (props) => {
       localStorage.setItem('_username', username);
       props.login(user.data.id, username);
     } catch (e) {
-      props.showErrorMessage(e.response.data.message);
+      const message = e.response.data.message;
+      props.showErrorMessage(
+        message === 'Validation error' ? 'Username already registered.' : message
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -85,25 +93,35 @@ const UserForm = (props) => {
           </div>
         )
       }
-      <div className="mb-6">
-        <button
-          className="bg-blue-400 text-white py-2 w-full rounded-sm"
-          onClick={() => handleClick()}
-        >
-          {isLoginMode ? 'Login' : 'Sign Up'}
-        </button>
-      </div>
-      <p
-        className="text-xs text-gray-500 underline text-center cursor-pointer"
-        onClick={() => {
-          setUsername('');
-          setPassword('');
-          setConfPassword('');
-          setLoginMode(!isLoginMode);
-        }}
-      >
-        Click here to {isLoginMode ? 'Sign Up' : 'Login'}
-      </p>
+      {
+        isLoading ? (
+          <div className="flex justify-center mt-2">
+            <img src="/loading.gif" alt="Loading" className="w-10 h-10" />
+          </div>
+        ) : (
+          <>
+            <div className="mb-6">
+              <button
+                className="bg-blue-400 text-white py-2 w-full rounded-sm"
+                onClick={() => handleClick()}
+              >
+                {isLoginMode ? 'Login' : 'Sign Up'}
+              </button>
+            </div>
+            <p
+              className="text-xs text-gray-500 underline text-center cursor-pointer"
+              onClick={() => {
+                setUsername('');
+                setPassword('');
+                setConfPassword('');
+                setLoginMode(!isLoginMode);
+              }}
+            >
+              Click here to {isLoginMode ? 'Sign Up' : 'Login'}
+            </p>
+          </>
+        )
+      }
     </div>
   );
 };
